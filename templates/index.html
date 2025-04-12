@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Bitki Takip Sistemi</title>
-    <style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<!--     <style>
         body { font-family: Arial; margin: 40px; }
         h1 { color: #2c3e50; }
         form { margin-bottom: 30px; }
         input, select, button { margin: 10px 0; padding: 10px; width: 100%; max-width: 400px; }
         .plant-list, .esp-data, .schedule { margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; }
         .plant-item { margin-bottom: 10px; }
-    </style>
+    </style> -->
 </head>
 <body>
     <h1>🌱 Bitki Takip ve Öneri Sistemi</h1>
@@ -27,7 +28,7 @@
         {% endif %}
     </div>
 
-    <form method="POST">
+    <form id="plantForm" method="POST">
         <h3>🔍 Bitki Önerisi İçin Bilgilerinizi Girin</h3>
         <label>Sıcaklık (°C):</label>
         <input type="number" name="temperature" step="0.1" required>
@@ -74,5 +75,29 @@
         </ul>
     </div>
     {% endif %}
+    <script>
+        document.getElementById('plantForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            const data = {
+                temperature: formData.get('temperature'),
+                soil_moisture: formData.get('soil_moisture'),
+                season: formData.get('season'),
+                start_date: formData.get('start_date')
+            };
+
+            fetch('/suggest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(data)
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
 </body>
 </html>
