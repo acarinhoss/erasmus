@@ -1,24 +1,78 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ESP32 Verileri</title>
+    <title>Bitki Takip Sistemi</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        h1 { color: #2c3e50; }
+        form { margin-bottom: 30px; }
+        input, select, button { margin: 10px 0; padding: 10px; width: 100%; max-width: 400px; }
+        .plant-list, .esp-data, .schedule { margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; }
+        .plant-item { margin-bottom: 10px; }
+    </style>
 </head>
 <body>
-    <h1>ESP32 Sensör Verileri</h1>
-    <p><strong>Sıcaklık:</strong> <span id="temperature">Yükleniyor...</span> °C</p>
-    <p><strong>Nem:</strong> <span id="humidity">Yükleniyor...</span> %</p>
-    <p><strong>Toprak Nem:</strong> <span id="soil">Yükleniyor...</span></p>
+    <h1>🌱 Bitki Takip ve Öneri Sistemi</h1>
 
-    <script>
-        fetch('/api/data')
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('temperature').innerText = data.temperature;
-                document.getElementById('humidity').innerText = data.humidity;
-                document.getElementById('soil').innerText = data.soil;
-            })
-            .catch(err => console.error(err));
-    </script>
+    <div class="esp-data">
+        <h3>📡 ESP32'den Gelen Veriler</h3>
+        {% if esp_data %}
+            <p><strong>Sıcaklık:</strong> {{ esp_data.temperature }} °C</p>
+            <p><strong>Nem:</strong> {{ esp_data.humidity }} %</p>
+            <p><strong>Toprak Nem:</strong> {{ esp_data.soil }}</p>
+            <p><strong>Durum:</strong> Sıcaklık - {{ esp_data.temp_status }}, Toprak - {{ esp_data.soil_status }}</p>
+        {% else %}
+            <p>Henüz veri alınmadı.</p>
+        {% endif %}
+    </div>
+
+    <form method="POST">
+        <h3>🔍 Bitki Önerisi İçin Bilgilerinizi Girin</h3>
+        <label>Sıcaklık (°C):</label>
+        <input type="number" name="temperature" step="0.1" required>
+
+        <label>Toprak Durumu:</label>
+        <select name="soil_status" required>
+            <option value="dry">Kuru</option>
+            <option value="normal">Normal</option>
+            <option value="humid">Nemli</option>
+        </select>
+
+        <label>Mevsim:</label>
+        <select name="season" required>
+            <option value="spring">İlkbahar</option>
+            <option value="summer">Yaz</option>
+            <option value="autumn">Sonbahar</option>
+            <option value="winter">Kış</option>
+        </select>
+
+        <label>Başlangıç Tarihi:</label>
+        <input type="date" name="start_date" required>
+
+        <button type="submit">Bitki Öner</button>
+    </form>
+
+    {% if suggested_plants %}
+    <div class="plant-list">
+        <h3>🌾 Önerilen Bitkiler</h3>
+        {% for plant in suggested_plants %}
+            <div class="plant-item">
+                <strong>{{ plant.name }}</strong> — Sulama: {{ plant.watering }}, Büyüme Süresi: {{ plant.growth }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if schedule %}
+    <div class="schedule">
+        <h3>📅 Sulama Takvimi</h3>
+        <ul>
+            {% for day in schedule %}
+                <li>{{ day }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 </body>
 </html>
