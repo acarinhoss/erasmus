@@ -1,95 +1,112 @@
-from flask import Flask, render_template, request, redirect, url_for
-from datetime import datetime, timedelta
-from plant_data import plant_dict, temperature_ranges
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-# ESP'den gelen veriyi burada tutacağız (geçici)
-esp_data = {
-    "temperature": None,
-    "humidity": None,
-    "soil": None,
-    "timestamp": None
+# plant_dict ve temperature_ranges verilerini buraya ekliyoruz
+plant_dict = {
+    "temperature": {
+        "0-10": {
+            "spring": [("lettuce", "Once a week", "30 days")],
+            "summer": [],
+            "autumn": [],
+            "winter": [("celery", "Once a week", "90 days"), ("garlic", "Once a week", "120 days")]
+        },
+        "10-20": {
+            "spring": [("potato", "Twice a week", "90 days"), ("cabbage", "Once a week", "60 days"), ("lettuce", "Once a week", "30 days"), ("carrot", "Once a week", "75 days")],
+            "summer": [("broccoli", "Once a week", "70 days"), ("cauliflower", "Once a week", "70 days"), ("lettuce", "Once a week", "30 days")],
+            "autumn": [("carrot", "Once a week", "75 days"), ("cabbage", "Once a week", "60 days"), ("lettuce", "Once a week", "30 days")],
+            "winter": [("celery", "Once a week", "90 days"), ("garlic", "Once a week", "120 days")]
+        },
+        "15-25": {
+            "spring": [("onion", "Once a week", "90 days"), ("cucumber", "Twice a week", "50 days"), ("pepper", "Twice a week", "70 days")],
+            "summer": [("eggplant", "Twice a week", "80 days"), ("cucumber", "Twice a week", "50 days")],
+            "autumn": [("carrot", "Once a week", "75 days"), ("cauliflower", "Once a week", "70 days"), ("onion", "Once a week", "90 days"), ("grape", "Once a week", "120 days"), ("apple", "Once a week", "365 days"), ("pear", "Once a week", "365 days"), ("cherry", "Once a week", "120 days")],
+            "winter": [("cabbage", "Once a week", "60 days"), ("leek", "Once a week", "90 days")]
+        },
+        "15-30": {
+            "spring": [("tomato", "Twice a week", "70 days"), ("watermelon", "Twice a week", "90 days")],
+            "summer": [("pepper", "Twice a week", "70 days"), ("tomato", "Twice a week", "70 days")],
+            "autumn": [("cauliflower", "Once a week", "70 days"), ("carrot", "Once a week", "75 days")],
+            "winter": [("kale", "Once a week", "60 days"), ("spinach", "Once a week", "40 days")]
+        },
+        "20-30": {
+            "spring": [("eggplant", "Twice a week", "80 days"), ("tomato", "Twice a week", "70 days"), ("watermelon", "Twice a week", "90 days")],
+            "summer": [("pepper", "Twice a week", "70 days"), ("eggplant", "Twice a week", "80 days")],
+            "autumn": [("carrot", "Once a week", "75 days"), ("onion", "Once a week", "90 days"), ("plum", "Once a week", "120 days")],
+            "winter": [("kale", "Once a week", "60 days"), ("spinach", "Once a week", "40 days")]
+        },
+        "31-40": {
+            "spring": [],
+            "summer": [],
+            "autumn": [],
+            "winter": []
+        }
+    },
+    "humidity": {
+        "dry": {
+            "spring": [("tomato", "Twice a week", "70 days"), ("pepper", "Twice a week", "70 days")],
+            "summer": [("eggplant", "Twice a week", "80 days"), ("cucumber", "Twice a week", "50 days")],
+            "autumn": [("cauliflower", "Once a week", "70 days"), ("carrot", "Once a week", "75 days")],
+            "winter": [("celery", "Once a week", "90 days"), ("garlic", "Once a week", "120 days")]
+        },
+        "normal": {
+            "spring": [("strawberry", "Twice a week", "30 days"), ("watermelon", "Twice a week", "90 days")],
+            "summer": [("pepper", "Twice a week", "70 days"), ("tomato", "Twice a week", "70 days")],
+            "autumn": [("cauliflower", "Once a week", "70 days"), ("carrot", "Once a week", "75 days")],
+            "winter": [("kale", "Once a week", "60 days"), ("spinach", "Once a week", "40 days")]
+        },
+        "humid": {
+            "spring": [("kale", "Once a week", "60 days"), ("spinach", "Once a week", "40 days")],
+            "summer": [("broccoli", "Once a week", "70 days"), ("cauliflower", "Once a week", "70 days")],
+            "autumn": [("carrot", "Once a week", "75 days"), ("leek", "Once a week", "90 days")],
+            "winter": [("celery", "Once a week", "90 days"), ("garlic", "Once a week", "120 days")]
+        }
+    }
 }
 
-# Ana sayfa (veri ve giriş formu)
-@app.route("/", methods=["GET", "POST"])
+temperature_ranges = {
+    "0-10": (0, 10),
+    "10-20": (10, 20),
+    "15-25": (15, 25),
+    "15-30": (15, 30),
+    "20-30": (20, 30),
+    "31-40": (31, 40)
+}
+
+@app.route('/')
 def index():
-    global esp_data
+    return render_template('index.html')
 
-    if request.method == "POST":
-        season = request.form["season"]
-        temp = float(request.form["temperature"])
-        humidity = request.form["humidity"]
+@app.route('/suggest', methods=['POST'])
+def suggest_plants():
+    # Kullanıcıdan gelen veriler
+    temperature = float(request.form['temperature'])
+    soil_moisture = request.form['soil_moisture']
+    season = request.form['season']
+    
+    # Sıcaklık aralığını belirleme
+    temperature_range = None
+    for temp_range in temperature_ranges:
+        min_temp, max_temp = temperature_ranges[temp_range]
+        if min_temp <= temperature <= max_temp:
+            temperature_range = temp_range
+            break
+    
+    # Sıcaklık aralığına göre bitkileri alıyoruz
+    if temperature_range:
+        plants = plant_dict['temperature'][temperature_range][season]
+    else:
+        plants = []
 
-        # Sıcaklık aralığını bul
-        selected_range = None
-        for label, (low, high) in temperature_ranges.items():
-            if low <= temp <= high:
-                selected_range = label
-                break
+    # Nem durumuna göre bitkileri filtreleme
+    if soil_moisture in plant_dict['humidity']:
+        humidity_plants = plant_dict['humidity'][soil_moisture][season]
+        plants = list(set(plants) & set(humidity_plants))
 
-        suggested_plants = []
+    # Bitkileri formatlı şekilde hazırlıyoruz
+    plant_suggestions = [(plant[0], plant[1], plant[2]) for plant in plants]
 
-        if selected_range:
-            suggested_plants = plant_dict["temperature"].get(selected_range, {}).get(season, [])
-            if not suggested_plants:
-                suggested_plants = plant_dict["humidity"].get(humidity, {}).get(season, [])
+    return render_template('index.html', suggestions=plant_suggestions)
 
-        return render_template("results.html", 
-                               plants=suggested_plants, 
-                               temp=temp, 
-                               humidity=humidity, 
-                               season=season,
-                               esp_data=esp_data)
-
-    return render_template("index.html", esp_data=esp_data)
-
-# ESP32 veri gönderimi için endpoint
-@app.route("/update", methods=["POST"])
-def update_data():
-    global esp_data
-
-    try:
-        # Örnek veri: 'T:23.5,H:55,S:650,TS:Normal,SS:Normal'
-        raw_data = request.data.decode("utf-8")
-        print(f"Gelen veri: {raw_data}")
-        values = raw_data.split(",")
-
-        temp = float(values[0].split(":")[1])
-        humidity = int(values[1].split(":")[1])
-        soil = int(values[2].split(":")[1])
-
-        esp_data = {
-            "temperature": temp,
-            "humidity": humidity,
-            "soil": soil,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-
-        return "Data updated successfully", 200
-
-    except Exception as e:
-        return f"Error: {e}", 400
-
-
-# Bitki seçildikten sonra takvim sayfası
-@app.route("/calendar", methods=["POST"])
-def calendar():
-    plant = request.form["plant"]
-    frequency = request.form["frequency"]
-    duration = int(request.form["duration"].replace(" days", ""))
-
-    interval = 7 if "Once" in frequency else 3
-    today = datetime.today()
-    calendar_data = []
-
-    for i in range(0, duration, interval):
-        day = today + timedelta(days=i)
-        calendar_data.append(day.strftime("%Y-%m-%d"))
-
-    return render_template("calendar.html", plant=plant, frequency=frequency, calendar=calendar_data)
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(debug=True)
