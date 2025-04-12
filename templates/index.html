@@ -15,18 +15,6 @@
 <body>
     <h1>🌱 Bitki Takip ve Öneri Sistemi</h1>
 
-    <div class="esp-data">
-        <h3>📡 ESP32'den Gelen Veriler</h3>
-        {% if esp_data %}
-            <p><strong>Sıcaklık:</strong> {{ esp_data.temperature }} °C</p>
-            <p><strong>Nem:</strong> {{ esp_data.humidity }} %</p>
-            <p><strong>Toprak Nem:</strong> {{ esp_data.soil }}</p>
-            <p><strong>Durum:</strong> Sıcaklık - {{ esp_data.temp_status }}, Toprak - {{ esp_data.soil_status }}</p>
-        {% else %}
-            <p>Henüz veri alınmadı.</p>
-        {% endif %}
-    </div>
-
     <form method="POST">
         <h3>🔍 Bitki Önerisi İçin Bilgilerinizi Girin</h3>
         <label>Sıcaklık (°C):</label>
