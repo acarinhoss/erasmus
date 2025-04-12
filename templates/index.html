@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>ESP32 Verileri</title>
+</head>
+<body>
+    <h1>ESP32 Sensör Verileri</h1>
+    <p><strong>Sıcaklık:</strong> <span id="temperature">Yükleniyor...</span> °C</p>
+    <p><strong>Nem:</strong> <span id="humidity">Yükleniyor...</span> %</p>
+    <p><strong>Toprak Nem:</strong> <span id="soil">Yükleniyor...</span></p>
+
+    <script>
+        fetch('/api/data')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('temperature').innerText = data.temperature;
+                document.getElementById('humidity').innerText = data.humidity;
+                document.getElementById('soil').innerText = data.soil;
+            })
+            .catch(err => console.error(err));
+    </script>
+</body>
+</html>
