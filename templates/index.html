@@ -113,7 +113,6 @@
         clone.querySelector("input").type = "checkbox"
         clone.querySelector("input").id = `plant-check-${index}`
         clone.querySelector("input").onchange = (() => {
-          console.log(suggestedPlantList.querySelector(`#plant-check-${index}`))
           loadChosenPlantInfo(suggestedPlantList.querySelector(`#plant-check-${index}`).checked, index)
         })
         clone.querySelector("strong").textContent = `Öneri ${index + 1}: ${plant[0][0].toUpperCase() + plant[0].slice(1)}`
@@ -129,8 +128,6 @@
     }
 
     function loadChosenPlantInfo(checked, plantIndex) {
-      console.log(checked)
-      console.log(suggestedPlantItemList.children)
       if (checked) {
         Array.from(suggestedPlantItemList.children).forEach((item, index) => {
           if (index !== plantIndex) {
