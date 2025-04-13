@@ -73,3 +73,40 @@ temperature_ranges = {
     "20-30": (20, 30),
     "31-40": (31, 40)
 }
+
+# 🌱 Ana öneri fonksiyonu
+def get_suggestions(temp, soil_status, season):
+    temp_key = None
+    for key, (min_t, max_t) in temperature_ranges.items():
+        if min_t <= temp <= max_t:
+            temp_key = key
+            break
+
+    if not temp_key:
+        return []  # Sıcaklık aralığına uyan bitki yok
+
+    suggestions = []
+
+    # Sıcaklığa göre öneriler
+    if temp_key in plant_dict["temperature"]:
+        temp_plants = plant_dict["temperature"][temp_key].get(season.lower(), [])
+        for plant in temp_plants:
+            suggestions.append({
+                "name": plant[0],
+                "watering": plant[1],
+                "growth_time": plant[2],
+                "based_on": "temperature"
+            })
+
+    # Nem durumuna göre öneriler
+    if soil_status.lower() in plant_dict["humidity"]:
+        humidity_plants = plant_dict["humidity"][soil_status.lower()].get(season.lower(), [])
+        for plant in humidity_plants:
+            suggestions.append({
+                "name": plant[0],
+                "watering": plant[1],
+                "growth_time": plant[2],
+                "based_on": "humidity"
+            })
+
+    return suggestions
