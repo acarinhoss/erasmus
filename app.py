@@ -45,9 +45,10 @@ def receive_data():
         data = request.get_json()
         print("Gelen veri:", data)
 
-        temperature = (data['temperature'])
-        humidity = (data['humidity'])
-        soil_status = data['soil_status'].lower()
+        temperature = data['temperature']
+        humidity = data['humidity']
+        # ESP32 'soil_moisture' gönderiyor, bunu 'soil_status' olarak kullan
+        soil_status = data['soil_moisture'].lower()
 
         plant_suggestions = get_suggestions(temperature, humidity, soil_status)
         print("Önerilen bitkiler:", plant_suggestions)
