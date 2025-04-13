@@ -11,7 +11,7 @@ esp_data = {}
 @app.route('/', methods=['GET'])
 def index():
     global esp_data
-    
+    print(esp_data)
     return render_template('index.html',
                            esp_data=esp_data
                           )
@@ -32,6 +32,7 @@ def suggest_plants():
 @app.route('/data', methods=['POST'])
 def receive_data():
     try:
+        global esp_data
         data = request.get_json(force=True)  # JSON verisi zorla çözülür
         print("Gelen veri:", data)
         
