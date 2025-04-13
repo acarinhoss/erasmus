@@ -7,7 +7,7 @@ app = Flask(__name__)
 # ESP32'den gelen son verileri saklamak için
 esp_data = {}
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def index():
     global esp_data
     suggested_plants = None
