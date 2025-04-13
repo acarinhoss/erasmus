@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template, jsonify
+import traceback
 from datetime import datetime, timedelta
 from plant_data import get_suggestions
 
@@ -41,15 +42,20 @@ def index():
 
 @app.route('/data', methods=['POST'])
 def receive_data():
-    data = request.get_json()
-    print("Gelen veri:", data)
+    try:
+        data = request.get_json(force=True)  # JSON verisi zorla çözülür
+        print("Gelen veri:", data)
 
-    temperature = data['temperature']
-    humidity = data['humidity']
-    # ESP32 'soil_moisture' gönderiyor, bunu 'soil_status' olarak kullan
-    soil_status = data['soil_moisture'].lower()
+        temperature = data['temperature']
+        humidity = data['humidity']
+        soil_status = data['soil_moisture'].lower()  # veya 'soil_status' eğer ismini ESP'de değiştirdiysen
 
-    plant_suggestions = get_suggestions(temperature, humidity, soil_status)
-    print("Önerilen bitkiler:", plant_suggestions)
+        plant_suggestions = get_suggestions(temperature, humidity, soil_status)
+        print("Önerilen bitkiler:", plant_suggestions)
 
-    return jsonify({"status": "success", "suggestions": plant_suggestions})
+        return jsonify({"status": "success", "suggestions": plant_suggestions})
+
+    except Exception as e:
+        print("Hata oluştu:", e)
+        traceback.print_exc()  # Hatanın detaylarını terminale yaz
+        return jsonify({"status": "error", "message": str(e)}), 500
