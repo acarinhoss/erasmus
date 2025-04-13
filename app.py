@@ -45,8 +45,8 @@ def receive_data():
         data = request.get_json()
         print("Gelen veri:", data)
 
-        temperature = float(data['temperature'])
-        humidity = float(data['humidity'])
+        temperature = (data['temperature'])
+        humidity = (data['humidity'])
         soil_status = data['soil_status'].lower()
 
         plant_suggestions = get_suggestions(temperature, humidity, soil_status)
