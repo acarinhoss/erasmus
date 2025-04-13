@@ -75,38 +75,24 @@ temperature_ranges = {
 }
 
 # 🌱 Ana öneri fonksiyonu
-def get_suggestions(temp, soil_status, season):
-    temp_key = None
-    for key, (min_t, max_t) in temperature_ranges.items():
-        if min_t <= temp <= max_t:
-            temp_key = key
+def get_suggestions(temperature, soil_moisture, season):
+    temperature_range = None
+    for temp_range in temperature_ranges:
+        min_temp, max_temp = temperature_ranges[temp_range]
+        if min_temp <= temperature <= max_temp:
+            temperature_range = temp_range
             break
+    # Sıcaklık aralığına göre bitkileri alıyoruz
+    if temperature_range:
+        plants = plant_dict['temperature'][temperature_range][season]
+    else:
+        plants = []
+    # Nem durumuna göre bitkileri filtreleme
+    if soil_moisture in plant_dict['humidity']:
+        humidity_plants = plant_dict['humidity'][soil_moisture][season]
+        plants = list(set(plants) & set(humidity_plants))
 
-    if not temp_key:
-        return []  # Sıcaklık aralığına uyan bitki yok
+    # Bitkileri formatlı şekilde hazırlıyoruz
+    plant_suggestions = [(plant[0], plant[1], plant[2]) for plant in plants]
 
-    suggestions = []
-
-    # Sıcaklığa göre öneriler
-    if temp_key in plant_dict["temperature"]:
-        temp_plants = plant_dict["temperature"][temp_key].get(season.lower(), [])
-        for plant in temp_plants:
-            suggestions.append({
-                "name": plant[0],
-                "watering": plant[1],
-                "growth_time": plant[2],
-                "based_on": "temperature"
-            })
-
-    # Nem durumuna göre öneriler
-    if soil_status.lower() in plant_dict["humidity"]:
-        humidity_plants = plant_dict["humidity"][soil_status.lower()].get(season.lower(), [])
-        for plant in humidity_plants:
-            suggestions.append({
-                "name": plant[0],
-                "watering": plant[1],
-                "growth_time": plant[2],
-                "based_on": "humidity"
-            })
-
-    return suggestions
+    return plant_suggestions
