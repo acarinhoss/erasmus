@@ -11,49 +11,34 @@ esp_data = {}
 @app.route('/', methods=['GET'])
 def index():
     global esp_data
-    suggested_plants = None
-    schedule = None
-
-    if request.method == 'POST':
-        # Web formundan gelen verileri al
-        temperature = float(request.form.get('temperature'))
-        soil_status = request.form.get('soil_status')
-        season = request.form.get('season')
-        start_date_str = request.form.get('start_date')
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-
-        # Bitki önerilerini al
-        suggested_plants = get_suggestions(temperature, soil_status, season)
-
-        # Sulama takvimi oluştur
-        schedule = []
-        for plant in suggested_plants:
-            days = plant["watering"]
-            growth_days = plant["growth"]
-            for day in range(0, growth_days, days):
-                watering_day = start_date + timedelta(days=day)
-                schedule.append(f"{plant['name']}: {watering_day.strftime('%d.%m.%Y')}")
-
+    
     return render_template('index.html',
-                           esp_data=esp_data,
-                           suggested_plants=suggested_plants,
-                           schedule=schedule)
+                           esp_data=esp_data
+                          )
+@app.route('/suggest', methods=['POST'])
+def suggest_plants():
+    global esp_data
+    # Kullanıcıdan gelen veriler
+    temperature = float(request.form['temperature'])
+    soil_moisture = request.form['soil_status']
+    season = request.form['season']
+    date = request.form['start_date']
+    print(temperature,soil_moisture,season,date) 
 
+    plant_suggestions = get_suggestions(temperature, soil_moisture, season)
+
+    return render_template('index.html', suggested_plants=plant_suggestions, start_date=date, esp_data=esp_data)
 
 @app.route('/data', methods=['POST'])
 def receive_data():
     try:
         data = request.get_json(force=True)  # JSON verisi zorla çözülür
         print("Gelen veri:", data)
+        
+        esp_data = data
 
-        temperature = data['temperature']
-        humidity = data['humidity']
-        soil_status = data['soil_status']  # veya 'soil_status' eğer ismini ESP'de değiştirdiysen
-
-        plant_suggestions = get_suggestions(temperature, humidity, soil_status)
-        print("Önerilen bitkiler:", plant_suggestions)
-
-        return jsonify({"status": "success", "suggestions": plant_suggestions})
+        print(esp_data)
+        return jsonify({"status": "success"})
 
     except Exception as e:
         print("Hata oluştu:", e)
