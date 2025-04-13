@@ -1,103 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Bitki Takip Sistemi</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<!--     <style>
-        body { font-family: Arial; margin: 40px; }
-        h1 { color: #2c3e50; }
-        form { margin-bottom: 30px; }
-        input, select, button { margin: 10px 0; padding: 10px; width: 100%; max-width: 400px; }
-        .plant-list, .esp-data, .schedule { margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; }
-        .plant-item { margin-bottom: 10px; }
-    </style> -->
+  <meta charset="UTF-8" />
+  <title>Bitki Takip Sistemi</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
+
 <body>
-    <h1>🌱 Bitki Takip ve Öneri Sistemi</h1>
+  <h1>🌱 Bitki Takip ve Öneri Sistemi</h1>
 
-    <div class="esp-data">
-        <h3>📡 ESP32'den Gelen Veriler</h3>
-        {% if esp_data %}
-            <p><strong>Sıcaklık:</strong> {{ esp_data.temperature }} °C</p>
-            <p><strong>Nem:</strong> {{ esp_data.humidity }} %</p>
-            <p><strong>Toprak Nem:</strong> {{ esp_data.soil }}</p>
-            <p><strong>Durum:</strong> Sıcaklık - {{ esp_data.temp_status }}, Toprak - {{ esp_data.soil_status }}</p>
-        {% else %}
-            <p>Henüz veri alınmadı.</p>
-        {% endif %}
-    </div>
-
-    <form id="plantForm" method="POST">
-        <h3>🔍 Bitki Önerisi İçin Bilgilerinizi Girin</h3>
-        <label>Sıcaklık (°C):</label>
-        <input type="number" name="temperature" step="0.1" required>
-
-        <label>Toprak Durumu:</label>
-        <select name="soil_status" required>
-            <option value="dry">Kuru</option>
-            <option value="normal">Normal</option>
-            <option value="humid">Nemli</option>
-        </select>
-
-        <label>Mevsim:</label>
-        <select name="season" required>
-            <option value="spring">İlkbahar</option>
-            <option value="summer">Yaz</option>
-            <option value="autumn">Sonbahar</option>
-            <option value="winter">Kış</option>
-        </select>
-
-        <label>Başlangıç Tarihi:</label>
-        <input type="date" name="start_date" required>
-
-        <button type="submit">Bitki Öner</button>
-    </form>
-
-    {% if suggested_plants %}
-    <div class="plant-list">
-        <h3>🌾 Önerilen Bitkiler</h3>
-        {% for plant in suggested_plants %}
-            <div class="plant-item">
-                <strong>{{ plant }}</strong>
-            </div>
-        {% endfor %}
-    </div>
+  <div class="esp-data">
+    <h3>📡 ESP32'den Gelen Veriler</h3>
+    {% if esp_data %}
+    <p><strong>Sıcaklık:</strong> {{ esp_data.temperature }} °C</p>
+    <p><strong>Nem:</strong> {{ esp_data.humidity }} %</p>
+    <p><strong>Toprak Nem:</strong> {{ esp_data.soil }}</p>
+    <p>
+      <strong>Durum:</strong> Sıcaklık - {{ esp_data.temp_status }}, Toprak -
+      {{ esp_data.soil_status }}
+    </p>
+    {% else %}
+    <p>Henüz veri alınmadı.</p>
     {% endif %}
+  </div>
 
-    {% if schedule %}
-    <div class="schedule">
-        <h3>📅 Sulama Takvimi</h3>
-        <ul>
-            {% for day in schedule %}
-                <li>{{ day }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-    <script>
-        document.getElementById('plantForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+  <form id="plantForm" action="suggest" method="post">
+    <h3>🔍 Bitki Önerisi İçin Bilgilerinizi Girin</h3>
+    <label>Sıcaklık (°C):</label>
+    <input type="number" name="temperature" step="0.1" required />
 
-            const formData = new FormData(this);
-            const data = {
-                temperature: formData.get('temperature'),
-                soil_moisture: formData.get('soil_moisture'),
-                season: formData.get('season'),
-                start_date: formData.get('start_date')
-            };
+    <label>Toprak Durumu:</label>
+    <select name="soil_status" required>
+      <option value="dry">Kuru</option>
+      <option value="normal">Normal</option>
+      <option value="humid">Nemli</option>
+    </select>
 
-            fetch('/suggest', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(data)
-            })
-            .catch(error => {
-                console.error('Error:', error);
+    <label>Mevsim:</label>
+    <select name="season" required>
+      <option value="spring">İlkbahar</option>
+      <option value="summer">Yaz</option>
+      <option value="autumn">Sonbahar</option>
+      <option value="winter">Kış</option>
+    </select>
+
+    <label>Başlangıç Tarihi:</label>
+    <input type="date" name="start_date" required />
+
+    <button type="submit">Bitki Öner</button>
+  </form>
+
+  <div class="plant-list" id="plant-list" style="display: none">
+    <h3 id="suggested-plant-title">🌾 Önerilen Bitkilerden Seçim Yapın</h3>
+    <template id="plant-item-template">
+      <div class="plant-item" id="plant-item">
+        <div style="display: flex; flex-direction: row">
+          <input type="checkbox" id="plant-check-index" name="" />
+          <strong>Öneri index: bitki</strong>
+        </div>
+      </div>
+    </template>
+    <template id="plant-info-container-template">
+      <div id="plant-info-container" style="
+            display: flex;
+            flex-direction: column;
+            padding: 10px 5px;
+            gap: 10px;
+          ">
+        <strong id="water-interval-container"></strong>
+        <strong id="grow-time-container"></strong>
+        <div id="calendar"><strong>📅 Sulama Takvimi:</strong></div>
+        <button style="width: 25%; margin-top: 16px;">Seçim Değiştir</button>
+      </div>
+    </template>
+    <div id="suggest-plant-item-list"></div>
+  </div>
+
+  <script>
+    const suggestedPlants = {{ suggested_plants|default ([]) | tojson }}
+    const suggestedPlantList = document.getElementById("plant-list")
+    const suggestedPlantItemList = document.getElementById("suggest-plant-item-list")
+    const timeTable = {
+      "Once": 1,
+      "Twice": 2,
+      "Three": 3,
+      "Four": 4,
+      "Five": 5,
+      "Six": 6,
+      "Seven": 7
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.location.pathname !== "/suggest") {
+        return
+      }
+      suggestedPlantList.style.display = "block"
+      if (suggestedPlants.length > 0) {
+        loadPlantSuggestions()
+      }
+      else {
+        loadPlantSuggestionError()
+      }
+      suggestedPlantList.scrollIntoView({ behavior: "smooth" })
+    })
+
+    function loadPlantSuggestions() {
+      suggestedPlantItemList.innerHTML = ""
+      suggestedPlants.forEach((plant, index) => {
+        const clone = document.importNode(document.getElementById("plant-item-template").content, true);
+        clone.querySelector("input").type = "checkbox"
+        clone.querySelector("input").id = `plant-check-${index}`
+        clone.querySelector("input").onchange = (() => {
+          console.log(suggestedPlantList.querySelector(`#plant-check-${index}`))
+          loadChosenPlantInfo(suggestedPlantList.querySelector(`#plant-check-${index}`).checked, index)
+        })
+        clone.querySelector("strong").textContent = `Öneri ${index + 1}: ${plant[0][0].toUpperCase() + plant[0].slice(1)}`
+        suggestedPlantItemList.append(clone)
+      })
+    }
+
+    function loadPlantSuggestionError() {
+      const strong = document.createElement("strong")
+      strong.textContent = "Veridiğiniz Bilgilere Göre Bir Öneri Bulunamadı!"
+      strong.style.color = "red"
+      suggestedPlantItemList.append(strong)
+    }
+
+    function loadChosenPlantInfo(checked, plantIndex) {
+      console.log(checked)
+      console.log(suggestedPlantItemList.children)
+      if (checked) {
+        Array.from(suggestedPlantItemList.children).forEach((item, index) => {
+          if (index !== plantIndex) {
+            item.remove()
+          }
+          else {
+            item.querySelector("strong").textContent = "🌿 " + suggestedPlants[plantIndex][0][0].toUpperCase() + suggestedPlants[plantIndex][0].slice(1) + ":"
+            item.querySelector("input").remove()
+            const clone = document.importNode(document.getElementById("plant-info-container-template").content, true);
+            clone.querySelector("#water-interval-container").textContent = "💧 Sulama Sıklığı: " + suggestedPlants[plantIndex][1]
+            clone.querySelector("#grow-time-container").textContent = "⌛ Yetişme Süresi: " + suggestedPlants[plantIndex][2]
+            clone.querySelector("button").onclick = loadPlantSuggestions
+
+            suggestedPlantItemList.append(clone)
+            function generateDatesPerWeek(start, timesPerWeek, totalDays) {
+              const result = [];
+              const startDate = new Date(start);
+              const totalWeeks = Math.ceil(totalDays / 7);
+
+              for (let week = 0; week < totalWeeks; week++) {
+                const weekStart = new Date(startDate);
+                weekStart.setDate(startDate.getDate() + week * 7);
+
+                const daysInWeek = Array.from({ length: 7 }, (_, i) => i);
+                const selectedDays = [];
+
+                for (let i = 0; i < timesPerWeek; i++) {
+                  const dayOffset = Math.floor((i * 7) / timesPerWeek);
+                  if (!selectedDays.includes(dayOffset)) selectedDays.push(dayOffset);
+                }
+
+                for (const offset of selectedDays) {
+                  const eventDate = new Date(weekStart);
+                  eventDate.setDate(weekStart.getDate() + offset);
+
+                  const diffDays = Math.floor((eventDate - startDate) / (1000 * 60 * 60 * 24));
+                  if (diffDays < totalDays) {
+                    result.push(eventDate.toISOString().split("T")[0]);
+                  }
+                }
+              }
+
+              return result;
+            }
+
+            flatpickr("#calendar", {
+              inline: true,
+              mode: "multiple",
+              dateFormat: "Y-m-d",
+              defaultDate: generateDatesPerWeek("{{ start_date }}", timeTable[suggestedPlants[plantIndex][1].split(" ")[0]], parseInt(suggestedPlants[plantIndex][2].split(" ")[0]))
             });
+            suggestedPlantItemList.scrollIntoView({ behavior: "smooth" })
+          }
         });
-    </script>
+      }
+      else {
+        loadPlantSuggestions()
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </body>
+
 </html>
