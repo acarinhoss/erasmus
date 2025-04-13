@@ -41,25 +41,19 @@ def index():
 
 @app.route('/data', methods=['POST'])
 def receive_data():
-    global esp_data
-    data = request.get_json()
-
-    if not data:
-        return {"status": "error", "message": "JSON verisi yok"}, 400
-
     try:
-        esp_data = {
-            "temperature": data["temperature"],
-            "humidity": data["humidity"],
-            "soil": data["soil_moisture"],
-            "temp_status": "Normal" if 15 < data["temperature"] < 30 else "Uygun Değil",
-            "soil_status": "Nemli" if data["soil_moisture"].lower() == "humid" else "Kuru/Normal"
-        }
-        print("ESP32'den veri alındı:", esp_data)
-        return {"status": "ok"}
-    except KeyError as e:
-        return {"status": "error", "message": f"Eksik alan: {str(e)}"}, 400
+        data = request.get_json()
+        print("Gelen veri:", data)
 
+        temperature = float(data['temperature'])
+        humidity = float(data['humidity'])
+        soil_status = data['soil_status'].lower()
 
-if __name__ == '__main__':
-    app.run(debug=True)
+        plant_suggestions = get_suggestions(temperature, humidity, soil_status)
+        print("Önerilen bitkiler:", plant_suggestions)
+
+        return jsonify({"status": "success", "suggestions": plant_suggestions})
+
+    except Exception as e:
+        print("Hata oluştu:", e)
+        return jsonify({"status": "error", "message": str(e)}), 500
