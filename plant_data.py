@@ -147,6 +147,15 @@ plant_dict = {
     }
 }
 
+temperature_ranges = {
+    "0-10": (0, 10),
+    "10-15": (10, 15),
+    "15-20": (15, 20),
+    "20-25": (20, 25),
+    "25-30": (25, 30),
+    "30-35": (30, 35),
+    "35-40": (35, 40)
+}
 
 # 🌱 Ana öneri fonksiyonu
 def get_suggestions(temperature, soil_moisture, season):
