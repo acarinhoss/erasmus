@@ -41,20 +41,15 @@ def index():
 
 @app.route('/data', methods=['POST'])
 def receive_data():
-    try:
-        data = request.get_json()
-        print("Gelen veri:", data)
+    data = request.get_json()
+    print("Gelen veri:", data)
 
-        temperature = data['temperature']
-        humidity = data['humidity']
-        # ESP32 'soil_moisture' gönderiyor, bunu 'soil_status' olarak kullan
-        soil_status = data['soil_moisture'].lower()
+    temperature = data['temperature']
+    humidity = data['humidity']
+    # ESP32 'soil_moisture' gönderiyor, bunu 'soil_status' olarak kullan
+    soil_status = data['soil_moisture'].lower()
 
-        plant_suggestions = get_suggestions(temperature, humidity, soil_status)
-        print("Önerilen bitkiler:", plant_suggestions)
+    plant_suggestions = get_suggestions(temperature, humidity, soil_status)
+    print("Önerilen bitkiler:", plant_suggestions)
 
-        return jsonify({"status": "success", "suggestions": plant_suggestions})
-
-    except Exception as e:
-        print("Hata oluştu:", e)
-        return jsonify({"status": "error", "message": str(e)}), 500
+    return jsonify({"status": "success", "suggestions": plant_suggestions})
