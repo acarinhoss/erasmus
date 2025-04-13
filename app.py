@@ -48,7 +48,7 @@ def receive_data():
 
         temperature = data['temperature']
         humidity = data['humidity']
-        soil_status = data['soil_status'].lower()  # veya 'soil_status' eğer ismini ESP'de değiştirdiysen
+        soil_status = data['soil_status']  # veya 'soil_status' eğer ismini ESP'de değiştirdiysen
 
         plant_suggestions = get_suggestions(temperature, humidity, soil_status)
         print("Önerilen bitkiler:", plant_suggestions)
