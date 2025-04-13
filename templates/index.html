@@ -79,6 +79,7 @@
   </div>
 
   <script>
+    console.log({{esp_data}})
     const suggestedPlants = {{ suggested_plants|default ([]) | tojson }}
     const suggestedPlantList = document.getElementById("plant-list")
     const suggestedPlantItemList = document.getElementById("suggest-plant-item-list")
