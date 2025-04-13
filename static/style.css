@@ -18,10 +18,11 @@ form {
     border-radius: 8px;
 }
 
-input, select, button {
+input[type="number"],input[type="date"], select, button {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
+    box-sizing: border-box;
 }
 
 button {
